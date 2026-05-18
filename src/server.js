@@ -1,9 +1,12 @@
+//server backend
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import authRoutes from '../src/routes/auth.routes.js'
+import authRoutes from './routes/auth.routes.js'
 import session from 'express-session'
-import { isAuthenticated, isSupervisor } from "../src/middlewares/auth.js"
+import FileStore from "session-file-store";
+import { isAuthenticated, isSupervisor } from "./middlewares/auth.js"
+import autosRoutes from "./routes/autos.routes.js";
 
 // # Cargamos variables de entorno desde .env
 dotenv.config()
@@ -14,7 +17,9 @@ const app = express()
 // # Esto permite que Express entienda body en formato JSON sin necesidad de usar body-parser
 app.use(express.json())
 
+const FileStoreSession = FileStore(session);
 
+app.set("trust proxy", 1);
 
 // # Elegimos la URL del frontend según entorno
 const allowedOrigin = process.env.NODE_ENV === 'production'
@@ -32,14 +37,20 @@ app.use(cors({
 // # Configuración de sesiones
 // * Esto crea un objeto req.session que podemos usar en cualquier ruta
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'dev-secret', // clave secreta
-    resave: false,       // # No guardar sesión si no hubo cambios
-    saveUninitialized: false, // # No guardar sesión vacía
-    cookie: { secure: process.env.NODE_ENV === 'production' } // # true si usamos https
-}))
+    store: new FileStoreSession({ path: "./sessions" }),
+    secret: process.env.SESSION_SECRET || 'dev-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        sameSite: 'lax'
+    }
+}));
 
 // # Usar rutas de auth
 app.use('/auth', authRoutes)
+app.use("/autos", autosRoutes);
 
 // # Leemos los usuarios del .env USERS=[JSON]
 let users = []

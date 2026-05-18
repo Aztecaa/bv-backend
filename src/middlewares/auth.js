@@ -1,3 +1,4 @@
+//middelwares/auth.js
 // # Middleware para verificar si hay un usuario logueado
 export function isAuthenticated(req, res, next) {
     if (!req.session.user) {
