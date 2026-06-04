@@ -1,49 +1,88 @@
-//routes/auth.routes.js
-import { Router } from "express"
+import { Router } from "express";
 
-const router = Router()
+import bcrypt from "bcrypt";
 
-// # Función auxiliar para leer usuarios desde .env
-function getUsers() {
+import prisma from "../lib/prisma.js";
+
+const router = Router();
+
+/* --------------------------
+   LOGIN
+--------------------------- */
+router.post("/login", async (req, res) => {
+
     try {
-        return JSON.parse(process.env.USERS || "[]")
+
+        const { username, password } = req.body;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                username
+            }
+        });
+
+        if (!user) {
+            return res.status(401).json({
+                message: "Credenciales inválidas"
+            });
+        }
+
+        const validPassword =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
+
+        if (!validPassword) {
+            return res.status(401).json({
+                message: "Credenciales inválidas"
+            });
+        }
+
+        if (!req.session) {
+            return res.status(500).json({
+                message: "Sesión no disponible"
+            });
+        }
+
+        req.session.user = {
+            id: user.id,
+            username: user.username,
+            role: user.role
+        };
+
+        res.json({
+            message: `Bienvenido ${user.username}`,
+            role: user.role
+        });
+
     } catch (error) {
-        console.error("Error al parsear USERS en .env:", error)
-        return []
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Error en login"
+        });
     }
-}
+});
 
-// # Endpoint POST /auth/login → recibe usuario y contraseña
-router.post("/login", (req, res) => {
-    const { username, password } = req.body  // # Credenciales del request
-    const users = getUsers()                 // # Cargamos lista de usuarios
-
-    // # Buscamos al usuario en la lista
-    const user = users.find(u => u.username === username && u.password === password)
-
-    if (!user) {
-        return res.status(401).json({ message: "Credenciales inválidas" })
-    }
-
-    // # Guardamos el rol en la sesión
-    // * Nos aseguramos de que req.session exista para no romper el código
-    if (!req.session) {
-        return res.status(500).json({ message: "Error: sesión no disponible" })
-    }
-    req.session.user = { username: user.username, role: user.role }
-
-    return res.json({ message: `Bienvenido ${user.username}`, role: user.role })
-})
-
-// # Endpoint GET /auth/logout → destruye la sesión actual
+/* --------------------------
+   LOGOUT
+--------------------------- */
 router.get("/logout", (req, res) => {
-    // * Verificamos que exista la sesión antes de destruirla
-    if (!req.session) {
-        return res.status(500).json({ message: "Error: sesión no disponible" })
-    }
-    req.session.destroy(() => {
-        res.json({ message: "Sesión cerrada" })
-    })
-})
 
-export default router
+    if (!req.session) {
+        return res.status(500).json({
+            message: "Sesión no disponible"
+        });
+    }
+
+    req.session.destroy(() => {
+
+        res.json({
+            message: "Sesión cerrada"
+        });
+    });
+});
+
+export default router;

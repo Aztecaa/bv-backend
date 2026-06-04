@@ -6,7 +6,9 @@ import authRoutes from './routes/auth.routes.js'
 import session from 'express-session'
 import FileStore from "session-file-store";
 import { isAuthenticated, isSupervisor } from "./middlewares/auth.js"
-import autosRoutes from "./routes/autos.routes.js";
+import autosRoutes from "./routes/cars.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
+import categoriesRoutes from "./routes/categories.routes.js";
 
 // # Cargamos variables de entorno desde .env
 dotenv.config()
@@ -14,25 +16,39 @@ dotenv.config()
 // # Middleware para parsear JSON en requests
 const app = express()
 
-// # Esto permite que Express entienda body en formato JSON sin necesidad de usar body-parser
-app.use(express.json())
-
 const FileStoreSession = FileStore(session);
 
 app.set("trust proxy", 1);
 
 // # Elegimos la URL del frontend según entorno
-const allowedOrigin = process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_PROD
-    : process.env.FRONTEND_DEV
+const allowedOrigins = [
+    process.env.FRONTEND_DEV,
+    process.env.FRONTEND_PROD,
+    'http://localhost:5173'
+];
 
 // # Middleware para permitir CORS (comunicación entre frontend y backend)
 app.use(cors({
-    origin: allowedOrigin,
+    origin: function (origin, callback) {
+        
+        // permitir requests sin origin (Postman/mobile)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        return callback(new Error(`CORS bloqueado para ${origin}`));
+    },
+    
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // 🔑 aseguramos métodos permitidos
-    allowedHeaders: ['Content-Type', 'Authorization']  // 🔑 headers permitidos
-}))
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// # Esto permite que Express entienda body en formato JSON sin necesidad de usar body-parser
+app.use(express.json())
+
 
 // # Configuración de sesiones
 // * Esto crea un objeto req.session que podemos usar en cualquier ruta
@@ -42,13 +58,17 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'lax'
+        sameSite: process.env.NODE_ENV === 'production'
+            ? 'none'
+            : 'lax'
     }
 }));
 
 // # Usar rutas de auth
+app.use("/categories", categoriesRoutes);
+app.use("/upload", uploadRoutes);
 app.use('/auth', authRoutes)
 app.use("/autos", autosRoutes);
 
