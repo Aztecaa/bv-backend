@@ -1,4 +1,4 @@
-//cars.service.js
+//src/services/cars.service.js
 import prisma from "../lib/prisma.js";
 
 /* --------------------------
@@ -19,7 +19,7 @@ export async function getAllCars() {
     console.log("🚗 AUTOS DESDE DB:");
     console.dir(cars, { depth: null });
 
-    return cars.map(formatCar);
+    return cars;
 }
 
 /* --------------------------
@@ -42,33 +42,33 @@ export async function createCar(auto) {
     const createdCar = await prisma.car.create({
         data: {
 
-            brand: auto.marca,
+            brand: auto.brand,
 
-            model: auto.modelo,
+            model: auto.model,
 
-            year: Number(auto.anio),
+            year: Number(auto.year),
 
-            price: Number(auto.precio),
+            price: Number(auto.price),
 
             kilometers:
-                Number(auto.kilometraje) || 0,
+                Number(auto.kilometers) || 0,
 
             transmission:
-                auto.transmision || "Manual",
+                auto.transmission || "Manual",
 
             fuelType:
-                auto.combustible || "Nafta",
+                auto.fuelType || "Nafta",
 
             condition:
-                auto.condicion === "NUEVO"
+                auto.condition === "NUEVO"
                     ? "NUEVO"
                     : "USADO",
 
             description:
-                auto.descripcion || "",
+                auto.description || "",
 
             featured:
-                auto.destacado || false,
+                auto.featured || false,
 
             categoryId:
                 category.id
@@ -79,7 +79,7 @@ export async function createCar(auto) {
 
         await prisma.carImage.create({
             data: {
-                url: auto.imagen,
+                url: auto.image,
                 isCover: true,
                 carId: createdCar.id
             }
@@ -126,39 +126,41 @@ export async function updateCar(id, auto) {
             id: Number(id)
         },
         data: {
-            brand: auto.marca,
+            brand: auto.brand,
 
-            model: auto.modelo,
+            model: auto.model,
 
             year:
-                auto.anio
-                    ? Number(auto.anio)
+                auto.yeatr
+                    ? Number(auto.year)
                     : undefined,
 
             price:
-                auto.precio
-                    ? Number(auto.precio)
+                auto.price
+                    ? Number(auto.price)
                     : undefined,
 
             kilometers:
-                auto.kilometraje
-                    ? Number(auto.kilometraje)
+                auto.kilometers
+                    ? Number(auto.kilometers)
                     : undefined,
 
             transmission:
-                auto.transmision,
+                auto.transmission,
+
+                location: auto.location,
 
             fuelType:
-                auto.combustible,
+                auto.fuelType,
 
             condition:
-                auto.condicion,
+                auto.condition,
 
             description:
-                auto.descripcion,
+                auto.description,
 
             featured:
-                auto.destacado,
+                auto.featured,
 
             categoryId
         }
@@ -175,7 +177,7 @@ export async function updateCar(id, auto) {
 
         await prisma.carImage.create({
             data: {
-                url: auto.imagen,
+                url: auto.image,
                 isCover: true,
                 carId: updatedCar.id
             }
@@ -207,44 +209,4 @@ export async function deleteCar(id) {
     });
 
     return existingCar;
-}
-
-/* --------------------------
-   Formatear respuesta
---------------------------- */
-function formatCar(car) {
-
-    return {
-        id: car.id,
-
-        marca: car.brand,
-        modelo: car.model,
-
-        anio: car.year,
-
-        precio: car.price,
-
-        kilometraje: car.kilometers,
-
-        transmision: car.transmission,
-
-        combustible: car.fuelType,
-
-        condicion: car.condition,
-
-        descripcion: car.description,
-
-        destacado: car.featured,
-
-        categoria:
-            car.category?.name || "General",
-
-        imagen:
-            car.images?.find(img => img.isCover)?.url
-            || car.images?.[0]?.url
-            || null,
-
-        imagenes:
-            car.images?.map(img => img.url) || []
-    };
 }

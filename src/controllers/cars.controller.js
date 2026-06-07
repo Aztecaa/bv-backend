@@ -1,3 +1,4 @@
+//src/controllers/cars.controller.js
 import {
     getAllCars,
     createCar,
@@ -9,12 +10,23 @@ import {
 GET--------------------------- */
 export async function getAutos(req, res) {
     try {
+
+        console.log("=== INICIO GET AUTOS ===");
+
         const autos = await getAllCars();
+
+        console.log("AUTOS:", autos.length);
+
         res.json(autos);
+
     } catch (error) {
+
+        console.error("ERROR GET AUTOS");
         console.error(error);
+
         res.status(500).json({
-            message: "Error obteniendo autos"
+            message: "Error obteniendo autos",
+            error: error.message
         });
     }
 }
@@ -24,7 +36,7 @@ export async function getAutos(req, res) {
 export async function createAuto(req, res) {
     try {
         const auto = req.body;
-        if (!auto.marca || !auto.modelo) {
+         if (!auto.marca || !auto.modelo) {
             return res.status(400).json({
                 message: "Datos incompletos"
             });
@@ -79,7 +91,7 @@ export async function removeAuto(req, res) {
             return res.status(404).json({
                 message: "Auto no encontrado"
 
-});
+            });
         }
         res.status(500).json({
             message: "Error eliminando auto"

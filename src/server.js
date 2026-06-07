@@ -6,12 +6,16 @@ import authRoutes from './routes/auth.routes.js'
 import session from 'express-session'
 import FileStore from "session-file-store";
 import { isAuthenticated, isSupervisor } from "./middlewares/auth.js"
+import upload from './middlewares/upload.js'
 import autosRoutes from "./routes/cars.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
+import prisma from './lib/prisma.js'
 
 // # Cargamos variables de entorno desde .env
 dotenv.config()
+
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 // # Middleware para parsear JSON en requests
 const app = express()
@@ -23,9 +27,9 @@ app.set("trust proxy", 1);
 // # Elegimos la URL del frontend según entorno
 const allowedOrigins = [
     process.env.FRONTEND_DEV,
-    process.env.FRONTEND_PROD,
-    'http://localhost:5173'
-];
+    process.env.FRONTEND_PROD
+].filter(Boolean);
+
 
 // # Middleware para permitir CORS (comunicación entre frontend y backend)
 app.use(cors({
@@ -40,7 +44,7 @@ app.use(cors({
         
         return callback(new Error(`CORS bloqueado para ${origin}`));
     },
-    
+
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -61,8 +65,8 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: process.env.NODE_ENV === 'production'
-            ? 'none'
-            : 'lax'
+        ? 'none'
+        : 'lax'
     }
 }));
 
@@ -97,6 +101,15 @@ app.get("/admin", isSupervisor, (req, res) => {
 
 // # Definimos el puerto de la app (por defecto 4000 o el de Render)
 const PORT = process.env.PORT || 4000
+
+console.log("DB:", !!process.env.DATABASE_URL);
+
+try {
+  await prisma.$connect();
+  console.log("✅ Prisma conectado");
+} catch (e) {
+  console.error("❌ Prisma error:", e);
+}
 
 // # Iniciamos el servidor en el puerto definido
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`))
