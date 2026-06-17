@@ -1,86 +1,67 @@
-import { Router } from "express";
+// bv-backend/src/routes/upload.routes.js
 
-import streamifier from "streamifier";
+import { Router } from 'express'
+import streamifier from 'streamifier'
+import multer from 'multer'
+import upload from '../middlewares/upload.js'
+import cloudinary from '../config/cloudinary.js'
+import { isAdmin } from '../middlewares/auth.js'
 
-import upload from "../middlewares/upload.js";
-
-import cloudinary
-    from "../config/cloudinary.js";
-
-const router = Router();
+const router = Router()
 
 /* --------------------------
    Upload imágenes
+   Protegido — solo supervisores
 --------------------------- */
 router.post(
-    "/",
-    upload.array("images", 10),
+    '/',
+    isAdmin,
+    upload.array('images', 10),
 
     async (req, res) => {
-
         try {
-
-            const files = req.files;
+            const files = req.files
 
             if (!files || !files.length) {
-                return res.status(400).json({
-                    message: "No se enviaron imágenes"
-                });
+                return res.status(400).json({ message: 'No se enviaron imágenes' })
             }
 
-            const uploadedImages = [];
+            const uploadedImages = []
 
             for (const file of files) {
-
-                const result =
-                    await uploadToCloudinary(file);
-
-                uploadedImages.push({
-                    url: result.secure_url
-                });
+                const result = await uploadToCloudinary(file)
+                uploadedImages.push({ url: result.secure_url })
             }
 
-            res.json(uploadedImages);
+            res.json(uploadedImages)
 
         } catch (error) {
 
-            console.error(error);
+            // Error de multer (tipo de archivo o tamaño)
+            if (error instanceof multer.MulterError || error.message.includes('Solo se permiten')) {
+                return res.status(400).json({ message: error.message })
+            }
 
-            res.status(500).json({
-                message: "Error subiendo imágenes"
-            });
+            console.error(error)
+            res.status(500).json({ message: 'Error subiendo imágenes' })
         }
     }
-);
+)
 
 /* --------------------------
-   Helper upload cloudinary
+   Helper — sube un archivo a Cloudinary
 --------------------------- */
 function uploadToCloudinary(file) {
-
     return new Promise((resolve, reject) => {
-
-        const stream =
-            cloudinary.uploader.upload_stream(
-
-                {
-                    folder: "bv-autos"
-                },
-
-                (error, result) => {
-
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(result);
-                    }
-                }
-            );
-
-        streamifier
-            .createReadStream(file.buffer)
-            .pipe(stream);
-    });
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: 'bv-autos' },
+            (error, result) => {
+                if (error) reject(error)
+                else resolve(result)
+            }
+        )
+        streamifier.createReadStream(file.buffer).pipe(stream)
+    })
 }
 
-export default router;
+export default router

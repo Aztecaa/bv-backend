@@ -1,3 +1,5 @@
+// bv-backend/prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,63 +18,56 @@ model User {
 }
 
 model Category {
-  id    Int    @id @default(autoincrement())
-  name  String
+  id   Int    @id @default(autoincrement())
+  name String @unique   // agregado @unique — necesario para que el upsert por name funcione sin duplicados
 
-  cars  Car[]
+  cars Car[]
 }
 
 model Car {
+  id           Int      @id @default(autoincrement())
 
-  id            Int      @id @default(autoincrement())
+  brand        String
+  model        String
+  version      String?
 
-  brand         String
-  model         String
-  version       String?
+  year         Int
 
-  year          Int
+  price        Float
+  offerPrice   Float?
 
-  price         Float
-  offerPrice    Float?
+  kilometers   Int
 
-  kilometers    Int
+  transmission String?
+  fuelType     String?
 
-  transmission  String?
-  fuelType      String?
+  condition    String?  // valores esperados: "NUEVO" | "USADO"
 
-  condition     String?
+  description  String?
+  shortDesc    String?
 
-  description   String?
-  shortDesc     String?
+  location     String?
 
-  location      String?
+  uniqueOwner  Boolean  @default(false)
+  transferable Boolean  @default(true)
+  acceptsTrade Boolean  @default(false)
 
-  uniqueOwner   Boolean @default(false)
+  saleType     String?  // valores esperados: "CONTADO" | "FINANCIADO" | "AMBOS"
 
-  transferable  Boolean @default(true)
+  featured     Boolean  @default(false)
+  visible      Boolean  @default(true)
+  sold         Boolean  @default(false)
+  reserved     Boolean  @default(false)
 
-  acceptsTrade  Boolean @default(false)
+  slug         String?  @unique  // agregado @unique — para URLs amigables sin colisiones
 
-  saleType      String? // contado, financiado, etc
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  featured      Boolean @default(false)
+  categoryId   Int?
+  category     Category? @relation(fields: [categoryId], references: [id])
 
-  visible       Boolean @default(true)
-
-  sold          Boolean @default(false)
-
-  reserved      Boolean @default(false)
-
-  slug          String?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  categoryId    Int?
-
-  category      Category? @relation(fields: [categoryId], references: [id])
-
-  images        CarImage[]
+  images       CarImage[]
 }
 
 model CarImage {
@@ -83,7 +78,4 @@ model CarImage {
   car     Car     @relation(fields: [carId], references: [id], onDelete: Cascade)
 }
 
-enum CarCondition {
-  NUEVO
-  USADO
-}
+// enum CarCondition eliminado — Car.condition es String?, este enum nunca se usó

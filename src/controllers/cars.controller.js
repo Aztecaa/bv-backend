@@ -1,100 +1,88 @@
-//src/controllers/cars.controller.js
+// bv-backend/src/controllers/cars.controller.js
+
 import {
     getAllCars,
     createCar,
     updateCar,
     deleteCar
-} from "../services/cars.service.js";
+} from '../services/cars.service.js'
 
-/* -------------------------
-GET--------------------------- */
+/* --------------------------
+   GET /autos
+--------------------------- */
 export async function getAutos(req, res) {
     try {
-
-        console.log("=== INICIO GET AUTOS ===");
-
-        const autos = await getAllCars();
-
-        console.log("AUTOS:", autos.length);
-
-        res.json(autos);
-
+        const autos = await getAllCars()
+        res.json(autos)
     } catch (error) {
-
-        console.error("ERROR GET AUTOS");
-        console.error(error);
-
+        console.error('Error obteniendo autos:', error)
         res.status(500).json({
-            message: "Error obteniendo autos",
+            message: 'Error obteniendo autos',
             error: error.message
-        });
+        })
     }
 }
 
-/* -------------------------
-   POST--------------------------- */
+/* --------------------------
+   POST /autos
+--------------------------- */
 export async function createAuto(req, res) {
     try {
-        const auto = req.body;
-         if (!auto.marca || !auto.modelo) {
-            return res.status(400).json({
-                message: "Datos incompletos"
-            });
+        const auto = req.body
+
+        // Validación con los nombres reales del schema (inglés)
+        if (!auto.brand || !auto.model) {
+            return res.status(400).json({ message: 'Marca y modelo son requeridos' })
         }
-        const createdCar = await createCar(auto);
-        res.json({
-            message: "Auto agregado",
+
+        const createdCar = await createCar(auto)
+
+        res.status(201).json({
+            message: 'Auto agregado',
             auto: createdCar
-        });
+        })
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: "Error creando auto"
-        });
+        console.error('Error creando auto:', error)
+        res.status(500).json({ message: 'Error creando auto' })
     }
 }
-/* -------------------------
-   PUT--------------------------- */
+
+/* --------------------------
+   PUT /autos/:id
+--------------------------- */
 export async function updateAuto(req, res) {
     try {
-        const { id } = req.params;
-        const updatedCar = await updateCar(id, req.body);
+        const { id } = req.params
+        const updatedCar = await updateCar(id, req.body)
         res.json({
-            message: "Auto actualizado",
+            message: 'Auto actualizado',
             auto: updatedCar
-        });
+        })
     } catch (error) {
-        console.error(error);
-        if (error.message === "AUTO_NOT_FOUND") {
-            return res.status(404).json({
-                message: "Auto no encontrado"
-            });
+        console.error('Error actualizando auto:', error)
+        if (error.message === 'AUTO_NOT_FOUND') {
+            return res.status(404).json({ message: 'Auto no encontrado' })
         }
-        res.status(500).json({
-            message: "Error actualizando auto"
-        });
+        res.status(500).json({ message: 'Error actualizando auto' })
     }
 }
-/* -------------------------
-   DELETE--------------------------- */
+
+/* --------------------------
+   DELETE /autos/:id
+--------------------------- */
 export async function removeAuto(req, res) {
     try {
-        const { id } = req.params;
-        const deletedCar = await deleteCar(id);
+        const { id } = req.params
+        const deletedCar = await deleteCar(id)
         res.json({
-            message: "Auto eliminado",
+            message: 'Auto eliminado',
             auto: deletedCar
-        });
+        })
     } catch (error) {
-        console.error(error);
-        if (error.message === "AUTO_NOT_FOUND") {
-            return res.status(404).json({
-                message: "Auto no encontrado"
-
-            });
+        console.error('Error eliminando auto:', error)
+        if (error.message === 'AUTO_NOT_FOUND') {
+            return res.status(404).json({ message: 'Auto no encontrado' })
         }
-        res.status(500).json({
-            message: "Error eliminando auto"
-        });
+        res.status(500).json({ message: 'Error eliminando auto' })
     }
 }
