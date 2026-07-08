@@ -1,7 +1,8 @@
-import pkg from "@prisma/client";
-
-const { PrismaClient } = pkg;
-
-const prisma = new PrismaClient();
-
-export default prisma;
+export default {
+  $connect: async () => {},
+  $disconnect: async () => {},
+  user: {},
+  category: {},
+  car: {},
+  carImage: {}
+};

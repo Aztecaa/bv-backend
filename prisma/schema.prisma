@@ -1,7 +1,6 @@
-// bv-backend/prisma/schema.prisma
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -13,54 +12,41 @@ model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
-  role      String   @default("seller")
+  role      String   @default("cliente")
   createdAt DateTime @default(now())
 }
 
 model Category {
   id   Int    @id @default(autoincrement())
-  name String @unique   // agregado @unique — necesario para que el upsert por name funcione sin duplicados
+  name String @unique
 
   cars Car[]
 }
 
 model Car {
   id           Int      @id @default(autoincrement())
-
   brand        String
   model        String
   version      String?
-
   year         Int
-
   price        Float
   offerPrice   Float?
-
   kilometers   Int
-
   transmission String?
   fuelType     String?
-
-  condition    String?  // valores esperados: "NUEVO" | "USADO"
-
+  condition    String?
   description  String?
   shortDesc    String?
-
   location     String?
-
   uniqueOwner  Boolean  @default(false)
   transferable Boolean  @default(true)
   acceptsTrade Boolean  @default(false)
-
-  saleType     String?  // valores esperados: "CONTADO" | "FINANCIADO" | "AMBOS"
-
+  saleType     String?
   featured     Boolean  @default(false)
   visible      Boolean  @default(true)
   sold         Boolean  @default(false)
   reserved     Boolean  @default(false)
-
-  slug         String?  @unique  // agregado @unique — para URLs amigables sin colisiones
-
+  slug         String?  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -77,5 +63,3 @@ model CarImage {
   carId   Int
   car     Car     @relation(fields: [carId], references: [id], onDelete: Cascade)
 }
-
-// enum CarCondition eliminado — Car.condition es String?, este enum nunca se usó

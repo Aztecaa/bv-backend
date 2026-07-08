@@ -42,8 +42,8 @@ export async function createAuto(req, res) {
             auto: createdCar
         })
     } catch (error) {
-        console.error('Error creando auto:', error)
-        res.status(500).json({ message: 'Error creando auto' })
+        console.error('[cars] Error creando auto:', error)
+        res.status(500).json({ message: 'Error creando auto', error: error.message })
     }
 }
 

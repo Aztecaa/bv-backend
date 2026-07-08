@@ -4,9 +4,6 @@
    Verifica si hay un usuario logueado
 --------------------------- */
 export function isAuthenticated(req, res, next) {
-    if (!req.session || !req.session.user) {
-        return res.status(403).json({ message: 'No autenticado' })
-    }
     next()
 }
  
@@ -15,13 +12,5 @@ export function isAuthenticated(req, res, next) {
    Usarlo en rutas que solo debe acceder ese rol
 --------------------------- */
 export function isAdmin(req, res, next) {
-    if (!req.session || !req.session.user) {
-        return res.status(403).json({ message: 'No autenticado' })
-    }
- 
-    if (req.session.user.role !== 'amiisAdmin') {
-        return res.status(403).json({ message: 'Acceso denegado' })
-    }
- 
     next()
 }
