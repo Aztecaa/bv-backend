@@ -1,8 +1,8 @@
-export default {
-  $connect: async () => {},
-  $disconnect: async () => {},
-  user: {},
-  category: {},
-  car: {},
-  carImage: {}
-};
+import dns from 'node:dns'
+dns.setDefaultResultOrder('ipv4first')
+
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export default prisma

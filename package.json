@@ -9,11 +9,14 @@
     "dev": "nodemon src/server.js",
     "seed": "node -e \"console.log('Seed no requerido para el store simple')\""
   },
+  "nodemonConfig": {
+  "ignore": ["sessions/*", "*.log"]
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^6.19.3",
     "@supabase/supabase-js": "^2.110.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",

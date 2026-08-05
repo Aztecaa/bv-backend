@@ -30,7 +30,6 @@ export async function createAuto(req, res) {
     try {
         const auto = req.body
 
-        // Validación con los nombres reales del schema (inglés)
         if (!auto.brand || !auto.model) {
             return res.status(400).json({ message: 'Marca y modelo son requeridos' })
         }
@@ -60,7 +59,7 @@ export async function updateAuto(req, res) {
         })
     } catch (error) {
         console.error('Error actualizando auto:', error)
-        if (error.message === 'AUTO_NOT_FOUND') {
+        if (error.message?.includes('not found')) {
             return res.status(404).json({ message: 'Auto no encontrado' })
         }
         res.status(500).json({ message: 'Error actualizando auto' })
@@ -80,7 +79,7 @@ export async function removeAuto(req, res) {
         })
     } catch (error) {
         console.error('Error eliminando auto:', error)
-        if (error.message === 'AUTO_NOT_FOUND') {
+        if (error.message?.includes('not found')) {
             return res.status(404).json({ message: 'Auto no encontrado' })
         }
         res.status(500).json({ message: 'Error eliminando auto' })

@@ -1,36 +1,67 @@
-// bv-backend/src/services/cars.service.js
+// src/services/cars.service.js
 
-import {
-    getCarsData,
-    createCarData,
-    updateCarData,
-    deleteCarData
-} from '../lib/simpleStore.js'
+import prisma from '../lib/prisma.js'
 
-/* --------------------------
-   Obtener todos los autos
---------------------------- */
 export async function getAllCars() {
-    return getCarsData()
+    return prisma.car.findMany({
+        include: {
+            category: true,
+            images: true
+        },
+        orderBy: { createdAt: 'desc' }
+    })
 }
 
-/* --------------------------
-   Crear auto
---------------------------- */
-export async function createCar(auto) {
-    return createCarData(auto)
+export async function createCar(data) {
+    const { images = [], categoryId, ...carData } = data
+
+    return prisma.car.create({
+        data: {
+            ...carData,
+            categoryId: categoryId ? Number(categoryId) : null,
+            images: {
+                create: images.map(img => ({
+                    url: img.url,
+                    isCover: img.isCover || false
+                }))
+            }
+        },
+        include: {
+            category: true,
+            images: true
+        }
+    })
 }
 
-/* --------------------------
-   Actualizar auto
---------------------------- */
-export async function updateCar(id, auto) {
-    return updateCarData(id, auto)
+export async function updateCar(id, data) {
+    const { images = [], categoryId, ...carData } = data
+
+    // Primero borramos imágenes anteriores si se envían nuevas
+    if (images.length > 0) {
+        await prisma.carImage.deleteMany({ where: { carId: Number(id) } })
+    }
+
+    return prisma.car.update({
+        where: { id: Number(id) },
+        data: {
+            ...carData,
+            categoryId: categoryId ? Number(categoryId) : undefined,
+            images: images.length > 0 ? {
+                create: images.map(img => ({
+                    url: img.url,
+                    isCover: img.isCover || false
+                }))
+            } : undefined
+        },
+        include: {
+            category: true,
+            images: true
+        }
+    })
 }
 
-/* --------------------------
-   Eliminar auto
---------------------------- */
 export async function deleteCar(id) {
-    return deleteCarData(id)
+    return prisma.car.delete({
+        where: { id: Number(id) }
+    })
 }
