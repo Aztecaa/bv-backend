@@ -71,14 +71,15 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
 
 // Configuración de sesiones con FileStore
 app.use(session({
-    store: new FileStoreSession({ path: './sessions' }),
+    store: new FileStoreSession({ path: './sessions', ttl: 60 * 60 * 24 * 7 }), // 7 días
     secret: process.env.SESSION_SECRET || 'dev-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 7 días
     }
 }))
 
